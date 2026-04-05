@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+enum CmsType {
+  PAGE
+  ANNOUNCEMENT
+  BANNER_COPY
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(CUSTOMER)
+  accounts      Account[]
+  sessions      Session[]
+  cmsDocuments  CmsDocument[]
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model CmsDocument {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String    @unique
+  title       String
+  summary     String?
+  content     String
+  type        CmsType   @default(PAGE)
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  authorId    String    @db.ObjectId
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+/// Homepage / layout image URLs (R2 or /public). Managed under Admin → Site images.
+model CmsSiteAsset {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  imageUrl  String
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id                   Int      @id @map("_id")
+  slug                 String   @unique
+  title                String
+  srcUrl               String
+  gallery              String[]
+  price                Float
+  discountAmount       Float    @default(0)
+  discountPercentage Float    @default(0)
+  rating               Float
+  sectionNewArrival    Boolean  @default(false)
+  sectionTopSelling    Boolean  @default(false)
+  sectionRelated       Boolean  @default(false)
+  published            Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+/// Singleton row: `key` is always `default`. Company branding, SEO, currency, payment toggles.
+model CompanySettings {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  key    String @unique
+  updatedAt DateTime @updatedAt
+
+  companyName     String
+  legalName       String?
+  supportEmail    String?
+  logoUrl         String?
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+
+  currencyCode          String @default("INR")
+  currencySymbol        String @default("₹")
+  currencyLocale        String @default("en-IN")
+  currencyDecimalPlaces Int    @default(2)
+
+  payCod          Boolean @default(true)
+  payUpi          Boolean @default(false)
+  payCard         Boolean @default(false)
+  payWallet       Boolean @default(false)
+  payNetBanking   Boolean @default(false)
+
+  /// Admin UI: show / configure COD block
+  payTypeCodSelected Boolean @default(true)
+  /// Admin UI: show / configure Online block (UPI, cards, wallets, netbanking)
+  payTypeOnlineSelected Boolean @default(true)
+  /// Checkout: offer online payment (when type selected + enabled)
+  payOnlineEnabled Boolean @default(false)
+
+  codFeeFlat             Float   @default(0)
+  codFeePercent          Float   @default(0)
+  codWaiveFeeAboveAmount Float?
+
+  /// Subset of: STRIPE, RAZORPAY, CASHFREE
+  onlineProviders String[] @default([])
+
+  stripePublishableKey String?
+  razorpayKeyId        String?
+  cashfreeAppId        String?
+
+  /// Server-only; never exposed in public JSON. Storefront reads same DB for payment APIs.
+  stripeSecretKey      String?
+  razorpayKeySecret    String?
+  cashfreeClientSecret String?
+
+  paymentInstructions String?
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  AWAITING_COD
+}
+
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber String   @unique
+  publicToken String   @unique
+
+  status        OrderStatus        @default(CONFIRMED)
+  paymentStatus OrderPaymentStatus @default(AWAITING_COD)
+
+  paymentMethod   String
+  paymentProvider String?
+
+  currencyCode String
+
+  subtotal       Float
+  discountAmount Float @default(0)
+  codFee         Float @default(0)
+  grandTotal     Float
+
+  items    Json
+  shipping Json
+
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
