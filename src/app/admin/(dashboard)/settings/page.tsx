@@ -31,9 +31,15 @@ export default async function CompanySettingsPage() {
         <p className="text-sm text-slate-600 mt-1">
           Branding, SEO defaults, and currency display.{" "}
           {can(role, "cms:write") && (
-            <Link href="/admin/settings/payment" className="text-indigo-600 font-medium hover:underline">
-              Payment settings
-            </Link>
+            <>
+              <Link href="/admin/settings/theme" className="text-indigo-600 font-medium hover:underline">
+                Theme editor
+              </Link>
+              {" · "}
+              <Link href="/admin/settings/payment" className="text-indigo-600 font-medium hover:underline">
+                Payment settings
+              </Link>
+            </>
           )}{" "}
           are configured separately.
         </p>

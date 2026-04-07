@@ -8,17 +8,21 @@ export type Permission =
   | "product:read"
   | "product:write"
   | "product:delete"
+  | "order:read"
+  | "customer:read"
   | "admin:access";
 
 const ROLE_MATRIX: Record<Role, Permission[]> = {
   CUSTOMER: [],
-  VIEWER: ["cms:read", "product:read", "admin:access"],
+  VIEWER: ["cms:read", "product:read", "order:read", "customer:read", "admin:access"],
   EDITOR: [
     "cms:read",
     "cms:write",
     "cms:publish",
     "product:read",
     "product:write",
+    "order:read",
+    "customer:read",
     "admin:access",
   ],
   ADMIN: [
@@ -29,6 +33,8 @@ const ROLE_MATRIX: Record<Role, Permission[]> = {
     "product:read",
     "product:write",
     "product:delete",
+    "order:read",
+    "customer:read",
     "admin:access",
   ],
 };

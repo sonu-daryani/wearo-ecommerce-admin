@@ -8,12 +8,15 @@ export default async function AdminHomePage() {
   const session = await auth();
   const role = session?.user?.role as Role;
 
-  const [totalDocs, publishedDocs, totalProducts, publishedProducts] = await Promise.all([
-    prisma.cmsDocument.count(),
-    prisma.cmsDocument.count({ where: { published: true } }),
-    prisma.product.count(),
-    prisma.product.count({ where: { published: true } }),
-  ]);
+  const [totalDocs, publishedDocs, totalProducts, publishedProducts, orderCount, customerCount] =
+    await Promise.all([
+      prisma.cmsDocument.count(),
+      prisma.cmsDocument.count({ where: { published: true } }),
+      prisma.product.count(),
+      prisma.product.count({ where: { published: true } }),
+      prisma.order.count(),
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
+    ]);
 
   const canWrite = can(role, "cms:write");
   const canDelete = can(role, "cms:delete");
@@ -27,7 +30,7 @@ export default async function AdminHomePage() {
         {ROLE_LABELS[role]}.
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-10">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-slate-500">CMS entries</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">{totalDocs}</p>
@@ -42,6 +45,14 @@ export default async function AdminHomePage() {
           <p className="text-xs text-slate-500 mt-1">{publishedProducts} live on shop</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Orders</p>
+          <p className="text-3xl font-bold text-slate-900 mt-1">{orderCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Customers</p>
+          <p className="text-3xl font-bold text-slate-900 mt-1">{customerCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-slate-500">Your permissions</p>
           <ul className="mt-2 text-sm text-slate-700 space-y-1">
             <li>{can(role, "cms:read") ? "✓ CMS read" : "— CMS read"}</li>
@@ -49,6 +60,7 @@ export default async function AdminHomePage() {
             <li>{canDelete ? "✓ CMS delete" : "— CMS delete"}</li>
             <li>{can(role, "product:read") ? "✓ Products read" : "— Products read"}</li>
             <li>{canProductWrite ? "✓ Products write" : "— Products write"}</li>
+            <li>{can(role, "order:read") ? "✓ Orders & store" : "— Orders & store"}</li>
           </ul>
         </div>
       </div>
@@ -88,7 +100,19 @@ export default async function AdminHomePage() {
             href="/admin/crm"
             className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium hover:bg-slate-50"
           >
-            CRM
+            Store overview
+          </Link>
+          <Link
+            href="/admin/orders"
+            className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Orders
+          </Link>
+          <Link
+            href="/admin/customers"
+            className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Customers
           </Link>
           {canWrite && (
             <Link

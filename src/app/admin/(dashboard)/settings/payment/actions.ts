@@ -18,7 +18,7 @@ function emptyToNull(s: string): string | null {
 }
 
 function parseProviders(formData: FormData): string[] {
-  const allowed = new Set(["STRIPE", "RAZORPAY", "CASHFREE"]);
+  const allowed = new Set(["CASHFREE", "RAZORPAY", "PAYTM", "PHONEPE", "PAYU"]);
   const raw = formData.getAll("onlineProviders").map(String);
   return Array.from(new Set(raw.filter((x) => allowed.has(x))));
 }
@@ -60,16 +60,23 @@ export async function updatePaymentSettings(
     payWallet: formData.get("payWallet") === "on",
     payNetBanking: formData.get("payNetBanking") === "on",
     onlineProviders: parseProviders(formData),
-    stripePublishableKey: emptyToNull(String(formData.get("stripePublishableKey") ?? "")),
-    razorpayKeyId: emptyToNull(String(formData.get("razorpayKeyId") ?? "")),
     cashfreeAppId: emptyToNull(String(formData.get("cashfreeAppId") ?? "")),
+    razorpayKeyId: emptyToNull(String(formData.get("razorpayKeyId") ?? "")),
+    paytmMerchantId: emptyToNull(String(formData.get("paytmMerchantId") ?? "")),
+    phonepeMerchantId: emptyToNull(String(formData.get("phonepeMerchantId") ?? "")),
     paymentInstructions: emptyToNull(String(formData.get("paymentInstructions") ?? "")),
   };
 
   const applySecret = (
     inputName: string,
     clearName: string,
-    field: "stripeSecretKey" | "razorpayKeySecret" | "cashfreeClientSecret"
+    field:
+      | "cashfreeClientSecret"
+      | "razorpayKeySecret"
+      | "paytmMerchantKey"
+      | "phonepeSaltKey"
+      | "payuMerchantKey"
+      | "payuSalt"
   ) => {
     if (formData.get(clearName) === "on") {
       data[field] = null;
@@ -79,9 +86,12 @@ export async function updatePaymentSettings(
     if (plain) data[field] = plain;
   };
 
-  applySecret("stripeSecret", "clearStripeSecret", "stripeSecretKey");
-  applySecret("razorpaySecret", "clearRazorpaySecret", "razorpayKeySecret");
   applySecret("cashfreeSecret", "clearCashfreeSecret", "cashfreeClientSecret");
+  applySecret("razorpaySecret", "clearRazorpaySecret", "razorpayKeySecret");
+  applySecret("paytmMerchantKey", "clearPaytmMerchantKey", "paytmMerchantKey");
+  applySecret("phonepeSaltKey", "clearPhonepeSaltKey", "phonepeSaltKey");
+  applySecret("payuMerchantKey", "clearPayuMerchantKey", "payuMerchantKey");
+  applySecret("payuSalt", "clearPayuSalt", "payuSalt");
 
   try {
     await prisma.companySettings.update({

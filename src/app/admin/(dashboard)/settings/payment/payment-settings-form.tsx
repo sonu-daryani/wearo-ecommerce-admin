@@ -1,10 +1,9 @@
-"use client";
+ "use client";
 
 import type { CompanySettings } from "@prisma/client";
 import { useFormState, useFormStatus } from "react-dom";
 import { useCallback, useMemo, useState } from "react";
 import { BookOpen, CreditCard, Trash2 } from "lucide-react";
-import { SiRazorpay, SiStripe } from "react-icons/si";
 import { useAdminFormToast } from "@/hooks/use-admin-form-toast";
 import type { PaymentSettingsFormState } from "./actions";
 import { updatePaymentSettings } from "./actions";
@@ -18,21 +17,26 @@ import {
 /** Client-safe row: secret key fields never leave the server. */
 export type PaymentSettingsFormModel = Omit<
   CompanySettings,
-  "stripeSecretKey" | "razorpayKeySecret" | "cashfreeClientSecret"
+  "cashfreeClientSecret" | "razorpayKeySecret" | "paytmMerchantKey" | "phonepeSaltKey" | "payuMerchantKey" | "payuSalt"
 > & {
-  stripeSecretOnFile: boolean;
-  razorpaySecretOnFile: boolean;
   cashfreeSecretOnFile: boolean;
+  razorpaySecretOnFile: boolean;
+  paytmMerchantKeyOnFile: boolean;
+  phonepeSaltKeyOnFile: boolean;
+  payuMerchantKeyOnFile: boolean;
+  payuSaltOnFile: boolean;
 };
 
 const PROVIDER_LABELS: Record<PaymentProviderId, string> = {
+  CASHFREE: "Cashfree",
+  PAYTM: "Paytm",
+  PHONEPE: "PhonePe",
+  PAYU: "PayU",
   STRIPE: "Stripe",
   RAZORPAY: "Razorpay",
-  CASHFREE: "Cashfree",
 };
 
-const ALL_PROVIDERS: PaymentProviderId[] = ["STRIPE", "RAZORPAY", "CASHFREE"];
-
+const ALL_PROVIDERS: PaymentProviderId[] = ["CASHFREE", "RAZORPAY", "PAYTM", "PHONEPE", "PAYU"];
 const FORM_ID = "payment-settings-form";
 
 function Submit() {
@@ -45,6 +49,37 @@ function Submit() {
     >
       {pending ? "Saving…" : "Save payment settings"}
     </button>
+  );
+}
+
+function SecretField({
+  label,
+  name,
+  clearName,
+  onFile,
+}: {
+  label: string;
+  name: string;
+  clearName: string;
+  onFile: boolean;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+      <input
+        name={name}
+        type="password"
+        autoComplete="new-password"
+        placeholder={onFile ? "Leave blank to keep current value" : "Enter value"}
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
+      />
+      {onFile && (
+        <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+          <input type="checkbox" name={clearName} className="rounded border-slate-300" />
+          Remove stored value
+        </label>
+      )}
+    </div>
   );
 }
 
@@ -88,34 +123,24 @@ function ModalShell({
 }
 
 function ProviderIcon({ id }: { id: PaymentProviderId }) {
-  const wrap = "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm";
-  if (id === "STRIPE") {
-    return (
-      <span className={wrap}>
-        <SiStripe className="h-6 w-6 text-[#635BFF]" aria-hidden />
-      </span>
-    );
-  }
-  if (id === "RAZORPAY") {
-    return (
-      <span className={wrap}>
-        <SiRazorpay className="h-6 w-6 text-[#0C2451]" aria-hidden />
-      </span>
-    );
-  }
+  const wrap =
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm";
   return (
     <span className={wrap}>
       <span className="text-xs font-bold tracking-tight text-indigo-700" aria-hidden>
-        CF
+        {id === "PHONEPE" ? "PP" : id === "PAYTM" ? "PT" : id === "PAYU" ? "PU" : id === "RAZORPAY" ? "RZ" : "CF"}
       </span>
     </span>
   );
 }
 
 function providerConfigured(id: PaymentProviderId, s: PaymentSettingsFormModel): boolean {
-  if (id === "STRIPE") return !!(s.stripePublishableKey?.trim() && s.stripeSecretOnFile);
+  if (id === "CASHFREE") return !!(s.cashfreeAppId?.trim() && s.cashfreeSecretOnFile);
   if (id === "RAZORPAY") return !!(s.razorpayKeyId?.trim() && s.razorpaySecretOnFile);
-  return !!(s.cashfreeAppId?.trim() && s.cashfreeSecretOnFile);
+  if (id === "PAYTM") return !!(s.paytmMerchantId?.trim() && s.paytmMerchantKeyOnFile);
+  if (id === "PHONEPE") return !!(s.phonepeMerchantId?.trim() && s.phonepeSaltKeyOnFile);
+  if (id === "PAYU") return !!(s.payuMerchantKeyOnFile && s.payuSaltOnFile);
+  return false;
 }
 
 type Props = {
@@ -131,7 +156,7 @@ export function PaymentSettingsForm({ settings, action }: Props) {
   const s = settings;
   const initialProviders = useMemo(() => {
     const raw = (s.onlineProviders ?? []).filter((p): p is PaymentProviderId =>
-      p === "STRIPE" || p === "RAZORPAY" || p === "CASHFREE"
+      p === "CASHFREE" || p === "RAZORPAY" || p === "PAYTM" || p === "PHONEPE" || p === "PAYU"
     );
     return Array.from(new Set(raw));
   }, [s.onlineProviders]);
@@ -158,7 +183,7 @@ export function PaymentSettingsForm({ settings, action }: Props) {
   const closeConfigure = useCallback(() => setConfigureProvider(null), []);
 
   const onAddSelect = (value: string) => {
-    if (value === "STRIPE" || value === "RAZORPAY" || value === "CASHFREE") {
+    if (value === "CASHFREE" || value === "RAZORPAY" || value === "PAYTM" || value === "PHONEPE" || value === "PAYU") {
       addProvider(value);
     }
     setAddDraft("");
@@ -253,6 +278,11 @@ export function PaymentSettingsForm({ settings, action }: Props) {
         </button>
       </section>
 
+      <section>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Payment Instructions</label>
+        <textarea name="paymentInstructions" rows={3} defaultValue={s.paymentInstructions ?? ""} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </section>
+
       <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-3">
         <Submit />
       </div>
@@ -316,11 +346,7 @@ export function PaymentSettingsForm({ settings, action }: Props) {
         </div>
       </ModalShell>
 
-      <ModalShell
-        open={onlineModal}
-        title="Online — channels & providers"
-        onClose={() => setOnlineModal(false)}
-      >
+      <ModalShell open={onlineModal} title="Online — channels & providers" onClose={() => setOnlineModal(false)}>
         <div className="space-y-6 text-sm">
           <div>
             <p className="font-medium text-slate-800 mb-2">Checkout channels</p>
@@ -382,7 +408,7 @@ export function PaymentSettingsForm({ settings, action }: Props) {
                       >
                         <ProviderIcon id={id} />
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-slate-900">{PROVIDER_LABELS[id]}</p>
+                          <p className="font-semibold text-slate-900">{PROVIDER_LABELS[id] ?? id}</p>
                           <p className="text-xs text-slate-500">
                             {providerConfigured(id, s) ? "Credentials on file" : "Setup required — click to add keys"}
                           </p>
@@ -422,19 +448,6 @@ export function PaymentSettingsForm({ settings, action }: Props) {
             </div>
           )}
 
-          <div>
-            <label htmlFor="paymentInstructions" className="block font-medium text-slate-700 mb-1">
-              Customer-facing payment notes
-            </label>
-            <textarea
-              id="paymentInstructions"
-              name="paymentInstructions"
-              rows={3}
-              defaultValue={s.paymentInstructions ?? ""}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
-
           <button
             type="button"
             onClick={() => setOnlineModal(false)}
@@ -445,25 +458,49 @@ export function PaymentSettingsForm({ settings, action }: Props) {
         </div>
       </ModalShell>
 
-      {/* Off-screen credential fields when configure modal closed (still submit with form) */}
       <div className="sr-only" aria-hidden>
-        {activeProviders.includes("STRIPE") && configureProvider !== "STRIPE" && (
-          <StripeCredentialFields s={s} />
+        {/* Off-screen credential fields when configure modal closed (still submit with form) */}
+        {activeProviders.includes("CASHFREE") && configureProvider !== "CASHFREE" && (
+          <>
+            <input name="cashfreeAppId" defaultValue={s.cashfreeAppId ?? ""} />
+            <input name="cashfreeSecret" />
+            {s.cashfreeSecretOnFile && <input type="checkbox" name="clearCashfreeSecret" />}
+          </>
         )}
         {activeProviders.includes("RAZORPAY") && configureProvider !== "RAZORPAY" && (
-          <RazorpayCredentialFields s={s} />
+          <>
+            <input name="razorpayKeyId" defaultValue={s.razorpayKeyId ?? ""} />
+            <input name="razorpaySecret" />
+            {s.razorpaySecretOnFile && <input type="checkbox" name="clearRazorpaySecret" />}
+          </>
         )}
-        {activeProviders.includes("CASHFREE") && configureProvider !== "CASHFREE" && (
-          <CashfreeCredentialFields s={s} />
+        {activeProviders.includes("PAYTM") && configureProvider !== "PAYTM" && (
+          <>
+            <input name="paytmMerchantId" defaultValue={s.paytmMerchantId ?? ""} />
+            <input name="paytmMerchantKey" />
+            {s.paytmMerchantKeyOnFile && <input type="checkbox" name="clearPaytmMerchantKey" />}
+          </>
+        )}
+        {activeProviders.includes("PHONEPE") && configureProvider !== "PHONEPE" && (
+          <>
+            <input name="phonepeMerchantId" defaultValue={s.phonepeMerchantId ?? ""} />
+            <input name="phonepeSaltKey" />
+            {s.phonepeSaltKeyOnFile && <input type="checkbox" name="clearPhonepeSaltKey" />}
+          </>
+        )}
+        {activeProviders.includes("PAYU") && configureProvider !== "PAYU" && (
+          <>
+            <input name="payuMerchantKey" />
+            <input name="payuSalt" />
+            {s.payuMerchantKeyOnFile && <input type="checkbox" name="clearPayuMerchantKey" />}
+            {s.payuSaltOnFile && <input type="checkbox" name="clearPayuSalt" />}
+          </>
         )}
       </div>
 
-      {/* Provider setup modal: guide + keys + save */}
       <div
         className={
-          configureProvider
-            ? "fixed inset-0 z-[60] flex items-center justify-center p-4"
-            : "sr-only pointer-events-none"
+          configureProvider ? "fixed inset-0 z-[60] flex items-center justify-center p-4" : "sr-only pointer-events-none"
         }
         aria-hidden={!configureProvider}
       >
@@ -482,14 +519,20 @@ export function PaymentSettingsForm({ settings, action }: Props) {
               : ""
           }
         >
-          {configureProvider === "STRIPE" && (
-            <ConfigureStripePanel s={s} onClose={closeConfigure} formId={FORM_ID} />
+          {configureProvider === "CASHFREE" && (
+            <ConfigureCashfreePanel s={s} onClose={closeConfigure} formId={FORM_ID} />
           )}
           {configureProvider === "RAZORPAY" && (
             <ConfigureRazorpayPanel s={s} onClose={closeConfigure} formId={FORM_ID} />
           )}
-          {configureProvider === "CASHFREE" && (
-            <ConfigureCashfreePanel s={s} onClose={closeConfigure} formId={FORM_ID} />
+          {configureProvider === "PAYTM" && (
+            <ConfigurePaytmPanel s={s} onClose={closeConfigure} formId={FORM_ID} />
+          )}
+          {configureProvider === "PHONEPE" && (
+            <ConfigurePhonepePanel s={s} onClose={closeConfigure} formId={FORM_ID} />
+          )}
+          {configureProvider === "PAYU" && (
+            <ConfigurePayuPanel s={s} onClose={closeConfigure} formId={FORM_ID} />
           )}
         </div>
       </div>
@@ -497,56 +540,7 @@ export function PaymentSettingsForm({ settings, action }: Props) {
   );
 }
 
-function StripeCredentialFields({ s }: { s: PaymentSettingsFormModel }) {
-  return (
-    <>
-      <input
-        name="stripePublishableKey"
-        defaultValue={s.stripePublishableKey ?? ""}
-        placeholder="pk_live_…"
-      />
-      <input
-        name="stripeSecret"
-        type="password"
-        autoComplete="new-password"
-        placeholder={s.stripeSecretOnFile ? "unchanged" : "sk_…"}
-      />
-      {s.stripeSecretOnFile && <input type="checkbox" name="clearStripeSecret" />}
-    </>
-  );
-}
-
-function RazorpayCredentialFields({ s }: { s: PaymentSettingsFormModel }) {
-  return (
-    <>
-      <input name="razorpayKeyId" defaultValue={s.razorpayKeyId ?? ""} />
-      <input
-        name="razorpaySecret"
-        type="password"
-        autoComplete="new-password"
-        placeholder={s.razorpaySecretOnFile ? "unchanged" : "secret"}
-      />
-      {s.razorpaySecretOnFile && <input type="checkbox" name="clearRazorpaySecret" />}
-    </>
-  );
-}
-
-function CashfreeCredentialFields({ s }: { s: PaymentSettingsFormModel }) {
-  return (
-    <>
-      <input name="cashfreeAppId" defaultValue={s.cashfreeAppId ?? ""} />
-      <input
-        name="cashfreeSecret"
-        type="password"
-        autoComplete="new-password"
-        placeholder={s.cashfreeSecretOnFile ? "unchanged" : "secret"}
-      />
-      {s.cashfreeSecretOnFile && <input type="checkbox" name="clearCashfreeSecret" />}
-    </>
-  );
-}
-
-function ConfigureStripePanel({
+function ConfigureCashfreePanel({
   s,
   onClose,
   formId,
@@ -559,21 +553,17 @@ function ConfigureStripePanel({
     <>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <ProviderIcon id="STRIPE" />
-          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("STRIPE")}</h3>
+          <ProviderIcon id="CASHFREE" />
+          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("CASHFREE")}</h3>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0"
-        >
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0">
           Close
         </button>
       </div>
       <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 mb-6 max-h-[38vh] overflow-y-auto">
-        <ProviderIntegrationGuideBody provider="STRIPE" />
+        <ProviderIntegrationGuideBody provider="CASHFREE" />
         <a
-          href={providerIntegrationDocUrl("STRIPE")}
+          href={providerIntegrationDocUrl("CASHFREE")}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-800"
@@ -582,56 +572,23 @@ function ConfigureStripePanel({
         </a>
       </div>
       <div className="space-y-4 border-t border-slate-100 pt-5">
-        <p className="text-sm font-medium text-slate-800">API keys</p>
+        <p className="text-sm font-medium text-slate-800">API credentials</p>
         <div>
-          <label htmlFor="modal-stripe-pk" className="block text-xs font-medium text-slate-600 mb-1">
-            Publishable key
-          </label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">App ID (public)</label>
           <input
-            id="modal-stripe-pk"
             form={formId}
-            name="stripePublishableKey"
-            defaultValue={s.stripePublishableKey ?? ""}
-            placeholder="pk_live_…"
+            name="cashfreeAppId"
+            defaultValue={s.cashfreeAppId ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
           />
         </div>
-        <div>
-          <label htmlFor="modal-stripe-sk" className="block text-xs font-medium text-slate-600 mb-1">
-            Secret key <span className="text-slate-400 font-normal">(server-only)</span>
-          </label>
-          <input
-            id="modal-stripe-sk"
-            form={formId}
-            name="stripeSecret"
-            type="password"
-            autoComplete="new-password"
-            placeholder={
-              s.stripeSecretOnFile ? "Leave blank to keep current secret" : "sk_live_… / sk_test_…"
-            }
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
-          />
-          {s.stripeSecretOnFile && (
-            <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-              <input form={formId} type="checkbox" name="clearStripeSecret" className="rounded border-slate-300" />
-              Remove stored secret
-            </label>
-          )}
-        </div>
+        <SecretField label="Secret key (server-only)" name="cashfreeSecret" clearName="clearCashfreeSecret" onFile={s.cashfreeSecretOnFile} />
       </div>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
           Cancel
         </button>
-        <button
-          type="submit"
-          form={formId}
-          className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700"
-        >
+        <button type="submit" form={formId} className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700">
           Save &amp; enable
         </button>
       </div>
@@ -655,11 +612,7 @@ function ConfigureRazorpayPanel({
           <ProviderIcon id="RAZORPAY" />
           <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("RAZORPAY")}</h3>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0"
-        >
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0">
           Close
         </button>
       </div>
@@ -675,53 +628,23 @@ function ConfigureRazorpayPanel({
         </a>
       </div>
       <div className="space-y-4 border-t border-slate-100 pt-5">
-        <p className="text-sm font-medium text-slate-800">API keys</p>
+        <p className="text-sm font-medium text-slate-800">API credentials</p>
         <div>
-          <label htmlFor="modal-rz-id" className="block text-xs font-medium text-slate-600 mb-1">
-            Key ID
-          </label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Key ID (public)</label>
           <input
-            id="modal-rz-id"
             form={formId}
             name="razorpayKeyId"
             defaultValue={s.razorpayKeyId ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
           />
         </div>
-        <div>
-          <label htmlFor="modal-rz-secret" className="block text-xs font-medium text-slate-600 mb-1">
-            Key secret <span className="text-slate-400 font-normal">(server-only)</span>
-          </label>
-          <input
-            id="modal-rz-secret"
-            form={formId}
-            name="razorpaySecret"
-            type="password"
-            autoComplete="new-password"
-            placeholder={s.razorpaySecretOnFile ? "Leave blank to keep current secret" : "From Razorpay dashboard"}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
-          />
-          {s.razorpaySecretOnFile && (
-            <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-              <input form={formId} type="checkbox" name="clearRazorpaySecret" className="rounded border-slate-300" />
-              Remove stored secret
-            </label>
-          )}
-        </div>
+        <SecretField label="Key Secret (server-only)" name="razorpaySecret" clearName="clearRazorpaySecret" onFile={s.razorpaySecretOnFile} />
       </div>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
           Cancel
         </button>
-        <button
-          type="submit"
-          form={formId}
-          className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700"
-        >
+        <button type="submit" form={formId} className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700">
           Save &amp; enable
         </button>
       </div>
@@ -729,7 +652,7 @@ function ConfigureRazorpayPanel({
   );
 }
 
-function ConfigureCashfreePanel({
+function ConfigurePaytmPanel({
   s,
   onClose,
   formId,
@@ -742,21 +665,17 @@ function ConfigureCashfreePanel({
     <>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <ProviderIcon id="CASHFREE" />
-          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("CASHFREE")}</h3>
+          <ProviderIcon id="PAYTM" />
+          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("PAYTM")}</h3>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0"
-        >
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0">
           Close
         </button>
       </div>
       <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 mb-6 max-h-[38vh] overflow-y-auto">
-        <ProviderIntegrationGuideBody provider="CASHFREE" />
+        <ProviderIntegrationGuideBody provider="PAYTM" />
         <a
-          href={providerIntegrationDocUrl("CASHFREE")}
+          href={providerIntegrationDocUrl("PAYTM")}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-800"
@@ -767,53 +686,125 @@ function ConfigureCashfreePanel({
       <div className="space-y-4 border-t border-slate-100 pt-5">
         <p className="text-sm font-medium text-slate-800">API credentials</p>
         <div>
-          <label htmlFor="modal-cf-app" className="block text-xs font-medium text-slate-600 mb-1">
-            App ID (public)
-          </label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Merchant ID</label>
           <input
-            id="modal-cf-app"
             form={formId}
-            name="cashfreeAppId"
-            defaultValue={s.cashfreeAppId ?? ""}
+            name="paytmMerchantId"
+            defaultValue={s.paytmMerchantId ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
           />
         </div>
-        <div>
-          <label htmlFor="modal-cf-secret" className="block text-xs font-medium text-slate-600 mb-1">
-            Secret key <span className="text-slate-400 font-normal">(server-only)</span>
-          </label>
-          <input
-            id="modal-cf-secret"
-            form={formId}
-            name="cashfreeSecret"
-            type="password"
-            autoComplete="new-password"
-            placeholder={
-              s.cashfreeSecretOnFile ? "Leave blank to keep current secret" : "From Cashfree dashboard"
-            }
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
-          />
-          {s.cashfreeSecretOnFile && (
-            <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-              <input form={formId} type="checkbox" name="clearCashfreeSecret" className="rounded border-slate-300" />
-              Remove stored secret
-            </label>
-          )}
-        </div>
+        <SecretField label="Merchant Key (server-only)" name="paytmMerchantKey" clearName="clearPaytmMerchantKey" onFile={s.paytmMerchantKeyOnFile} />
       </div>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
           Cancel
         </button>
-        <button
-          type="submit"
-          form={formId}
-          className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700"
+        <button type="submit" form={formId} className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700">
+          Save &amp; enable
+        </button>
+      </div>
+    </>
+  );
+}
+
+function ConfigurePhonepePanel({
+  s,
+  onClose,
+  formId,
+}: {
+  s: PaymentSettingsFormModel;
+  onClose: () => void;
+  formId: string;
+}) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <ProviderIcon id="PHONEPE" />
+          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("PHONEPE")}</h3>
+        </div>
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0">
+          Close
+        </button>
+      </div>
+      <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 mb-6 max-h-[38vh] overflow-y-auto">
+        <ProviderIntegrationGuideBody provider="PHONEPE" />
+        <a
+          href={providerIntegrationDocUrl("PHONEPE")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-800"
         >
+          Open official docs →
+        </a>
+      </div>
+      <div className="space-y-4 border-t border-slate-100 pt-5">
+        <p className="text-sm font-medium text-slate-800">API credentials</p>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Merchant ID</label>
+          <input
+            form={formId}
+            name="phonepeMerchantId"
+            defaultValue={s.phonepeMerchantId ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
+          />
+        </div>
+        <SecretField label="Salt Key (server-only)" name="phonepeSaltKey" clearName="clearPhonepeSaltKey" onFile={s.phonepeSaltKeyOnFile} />
+      </div>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" form={formId} className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700">
+          Save &amp; enable
+        </button>
+      </div>
+    </>
+  );
+}
+
+function ConfigurePayuPanel({
+  s,
+  onClose,
+  formId,
+}: {
+  s: PaymentSettingsFormModel;
+  onClose: () => void;
+  formId: string;
+}) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <ProviderIcon id="PAYU" />
+          <h3 className="text-lg font-semibold text-slate-900">{providerIntegrationTitle("PAYU")}</h3>
+        </div>
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 text-sm shrink-0">
+          Close
+        </button>
+      </div>
+      <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 mb-6 max-h-[38vh] overflow-y-auto">
+        <ProviderIntegrationGuideBody provider="PAYU" />
+        <a
+          href={providerIntegrationDocUrl("PAYU")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-800"
+        >
+          Open official docs →
+        </a>
+      </div>
+      <div className="space-y-4 border-t border-slate-100 pt-5">
+        <p className="text-sm font-medium text-slate-800">API credentials</p>
+        <SecretField label="Merchant Key (server-only)" name="payuMerchantKey" clearName="clearPayuMerchantKey" onFile={s.payuMerchantKeyOnFile} />
+        <SecretField label="Salt (server-only)" name="payuSalt" clearName="clearPayuSalt" onFile={s.payuSaltOnFile} />
+      </div>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" form={formId} className="rounded-full bg-indigo-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-indigo-700">
           Save &amp; enable
         </button>
       </div>

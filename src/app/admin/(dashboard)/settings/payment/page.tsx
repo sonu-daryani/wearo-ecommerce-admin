@@ -21,16 +21,22 @@ export default async function PaymentSettingsPage() {
 
   const row = await getCompanySettings();
   const {
-    stripeSecretKey: _sk,
-    razorpayKeySecret: _rz,
     cashfreeClientSecret: _cf,
+    razorpayKeySecret: _rzp,
+    paytmMerchantKey: _ptm,
+    phonepeSaltKey: _pps,
+    payuMerchantKey: _puk,
+    payuSalt: _pus,
     ...settingsBase
   } = row;
   const settings = {
     ...settingsBase,
-    stripeSecretOnFile: !!row.stripeSecretKey?.trim(),
-    razorpaySecretOnFile: !!row.razorpayKeySecret?.trim(),
     cashfreeSecretOnFile: !!row.cashfreeClientSecret?.trim(),
+    razorpaySecretOnFile: !!row.razorpayKeySecret?.trim(),
+    paytmMerchantKeyOnFile: !!row.paytmMerchantKey?.trim(),
+    phonepeSaltKeyOnFile: !!row.phonepeSaltKey?.trim(),
+    payuMerchantKeyOnFile: !!row.payuMerchantKey?.trim(),
+    payuSaltOnFile: !!row.payuSalt?.trim(),
   };
 
   return (

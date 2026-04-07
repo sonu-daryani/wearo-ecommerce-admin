@@ -4,6 +4,9 @@ const DOC_LINKS = {
   STRIPE: "https://stripe.com/docs/payments/checkout",
   RAZORPAY: "https://razorpay.com/docs/payments/server-integration/nodejs/payment-gateway/",
   CASHFREE: "https://www.cashfree.com/docs/api-reference/payments/latest/payments/pg",
+  PAYTM: "https://business.paytm.com/docs/all-in-one-sdk/hybrid-apps/web/",
+  PHONEPE: "https://developer.phonepe.com/v4/docs",
+  PAYU: "https://docs.payu.in/reference",
 } as const;
 
 export type PaymentProviderId = keyof typeof DOC_LINKS;
@@ -64,28 +67,26 @@ const bodies: Record<Provider, React.ReactNode> = {
   ),
   CASHFREE: (
     <div className="space-y-4 text-sm text-slate-700">
-      <p>
-        Cashfree PG lets you create a <strong>session</strong> or <strong>order</strong> server-side, then redirect or
-        embed their JS SDK using the <strong>App ID</strong> (public) while keeping the <strong>Secret Key</strong> on
-        the server.
-      </p>
-      <ol className="list-decimal pl-5 space-y-2">
-        <li>Merchants → Developers → API keys: App ID and Secret Key.</li>
-        <li>
-          Save <strong>App ID</strong> and <strong>Secret key</strong> below (stored in DB, server-only).
-        </li>
-        <li>
-          Storefront: <code className="text-xs">CASHFREE_ENV=sandbox|production</code> for API / SDK mode.
-        </li>
-        <li>Create payment session from your backend; redirect customer to Cashfree or use drop-in component.</li>
-        <li>
-          Verify payment via webhook (<code className="text-xs">PAYMENT_SUCCESS_WEBHOOK</code>) or verify API before
-          marking the order paid.
-        </li>
-      </ol>
-      <p className="text-xs text-slate-500">
-        Required: App ID and secret below; <code className="text-xs">CASHFREE_ENV</code> on storefront.
-      </p>
+      <p>Use Cashfree App ID + Secret key for server-side API calls.</p>
+      <p className="text-xs text-slate-500">For this setup, use provider id and secret credentials only.</p>
+    </div>
+  ),
+  PAYTM: (
+    <div className="space-y-4 text-sm text-slate-700">
+      <p>Use Paytm MID and Merchant Key for server-side integration.</p>
+      <p className="text-xs text-slate-500">Save Merchant ID and Merchant Key in Admin payment settings.</p>
+    </div>
+  ),
+  PHONEPE: (
+    <div className="space-y-4 text-sm text-slate-700">
+      <p>Use PhonePe Merchant ID and Salt Key for server-side integration.</p>
+      <p className="text-xs text-slate-500">Save Merchant ID and Salt Key in Admin payment settings.</p>
+    </div>
+  ),
+  PAYU: (
+    <div className="space-y-4 text-sm text-slate-700">
+      <p>Use PayU Merchant Key and Salt for server-side integration.</p>
+      <p className="text-xs text-slate-500">Save Merchant Key and Salt in Admin payment settings.</p>
     </div>
   ),
 };
@@ -94,6 +95,9 @@ const titles: Record<Provider, string> = {
   STRIPE: "Stripe — integration & keys",
   RAZORPAY: "Razorpay — integration & keys",
   CASHFREE: "Cashfree — integration & keys",
+  PAYTM: "Paytm — integration & keys",
+  PHONEPE: "PhonePe — integration & keys",
+  PAYU: "PayU — integration & keys",
 };
 
 export function providerIntegrationTitle(p: PaymentProviderId): string {

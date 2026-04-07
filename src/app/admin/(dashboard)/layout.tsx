@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminMain } from "./admin-main";
 import { auth } from "@/auth";
 import { ROLE_LABELS } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
@@ -26,7 +27,7 @@ export default async function AdminDashboardLayout({
             <Link href="/admin" className="text-lg font-bold text-slate-900">
               Wearo Admin
             </Link>
-            <p className="text-xs text-slate-500 mt-1">CMS &amp; access control</p>
+            <p className="text-xs text-slate-500 mt-1">Store, CMS &amp; settings</p>
           </div>
           <nav className="flex flex-col p-2 gap-0.5">
             <Link
@@ -35,6 +36,36 @@ export default async function AdminDashboardLayout({
             >
               Dashboard
             </Link>
+            <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Store
+            </p>
+            <Link
+              href="/admin/crm"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Store overview
+            </Link>
+            <Link
+              href="/admin/orders"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Orders
+            </Link>
+            <Link
+              href="/admin/customers"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Customers
+            </Link>
+            <Link
+              href="/admin/products"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Products
+            </Link>
+            <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Content
+            </p>
             <Link
               href="/admin/cms"
               className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
@@ -47,18 +78,9 @@ export default async function AdminDashboardLayout({
             >
               Site images
             </Link>
-            <Link
-              href="/admin/products"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              Products
-            </Link>
-            <Link
-              href="/admin/crm"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              CRM
-            </Link>
+            <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Settings
+            </p>
             <Link
               href="/admin/settings"
               className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
@@ -70,6 +92,12 @@ export default async function AdminDashboardLayout({
               className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               Payment settings
+            </Link>
+            <Link
+              href="/admin/editor"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Storefront editor
             </Link>
             <a
               href={storefrontUrl}
@@ -89,27 +117,27 @@ export default async function AdminDashboardLayout({
               Admin
             </Link>
             <div className="flex gap-2 text-xs sm:text-sm flex-wrap justify-end">
-              <Link href="/admin/cms" className="text-primary font-medium">
-                CMS
+              <Link href="/admin/crm" className="text-primary font-medium">
+                Store
               </Link>
-              <Link href="/admin/cms/site-images" className="text-primary font-medium">
-                Images
+              <Link href="/admin/orders" className="text-primary font-medium">
+                Orders
+              </Link>
+              <Link href="/admin/customers" className="text-primary font-medium">
+                Customers
               </Link>
               <Link href="/admin/products" className="text-primary font-medium">
                 Products
               </Link>
-              <Link href="/admin/crm" className="text-primary font-medium">
-                CRM
+              <Link href="/admin/cms" className="text-primary font-medium">
+                CMS
               </Link>
               <Link href="/admin/settings" className="text-primary font-medium">
                 Settings
               </Link>
-              <Link href="/admin/settings/payment" className="text-primary font-medium">
-                Pay
-              </Link>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-8 max-w-5xl w-full mx-auto">{children}</main>
+          <AdminMain>{children}</AdminMain>
         </div>
       </div>
     </div>
