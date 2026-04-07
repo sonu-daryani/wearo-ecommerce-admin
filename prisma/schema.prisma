@@ -12,6 +12,7 @@ enum Role {
   VIEWER
   EDITOR
   ADMIN
+  SUPERADMIN
 }
 
 enum CmsType {
@@ -109,6 +110,8 @@ model Product {
   sectionTopSelling    Boolean  @default(false)
   sectionRelated       Boolean  @default(false)
   published            Boolean  @default(true)
+  /// Seeded catalog rows (`npm run seed:products`). Only SUPERADMIN may delete.
+  isDefault            Boolean  @default(false)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }

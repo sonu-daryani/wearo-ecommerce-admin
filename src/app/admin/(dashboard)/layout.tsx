@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminMain } from "./admin-main";
+import SignOutButton from "@/components/auth/SignOutButton";
 import { auth } from "@/auth";
 import { ROLE_LABELS } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
@@ -22,7 +23,7 @@ export default async function AdminDashboardLayout({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">
-        <aside className="hidden w-56 shrink-0 border-r border-slate-200 bg-white md:flex flex-col">
+        <aside className="hidden w-56 shrink-0 border-r border-slate-200 bg-white md:flex flex-col md:fixed md:inset-y-0 md:left-0 md:z-30 overflow-y-auto overscroll-contain">
           <div className="p-4 border-b border-slate-200">
             <Link href="/admin" className="text-lg font-bold text-slate-900">
               Wearo Admin
@@ -106,17 +107,23 @@ export default async function AdminDashboardLayout({
               ← Storefront
             </a>
           </nav>
-          <div className="mt-auto p-4 border-t border-slate-200 text-xs text-slate-500">
-            <p className="font-medium text-slate-700 truncate">{session?.user?.email}</p>
-            <p>{role ? ROLE_LABELS[role] : "—"}</p>
+          <div className="mt-auto p-4 border-t border-slate-200 text-xs text-slate-500 space-y-3">
+            <div>
+              <p className="font-medium text-slate-700 truncate">{session?.user?.email}</p>
+              <p className="mt-0.5">{role ? ROLE_LABELS[role] : "—"}</p>
+            </div>
+            <SignOutButton size="sm" className="w-full" />
           </div>
         </aside>
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="md:hidden flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-            <Link href="/admin" className="font-bold">
-              Admin
-            </Link>
-            <div className="flex gap-2 text-xs sm:text-sm flex-wrap justify-end">
+        <div className="flex-1 flex flex-col min-w-0 md:pl-56">
+          <header className="md:hidden border-b border-slate-200 bg-white px-4 py-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <Link href="/admin" className="font-bold shrink-0">
+                Admin
+              </Link>
+              <SignOutButton size="sm" variant="outline" className="shrink-0 text-xs" />
+            </div>
+            <div className="flex gap-2 text-xs sm:text-sm flex-wrap">
               <Link href="/admin/crm" className="text-primary font-medium">
                 Store
               </Link>

@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { can } from "@/lib/rbac";
+import { can, isSuperAdmin } from "@/lib/rbac";
 import { getNextProductId } from "@/lib/product-queries";
 import type { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -84,6 +84,7 @@ export async function createProduct(
         sectionTopSelling,
         sectionRelated,
         published,
+        isDefault: false,
       },
     });
   } catch {
@@ -174,6 +175,17 @@ export async function deleteProduct(
 
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) return { error: "Invalid product." };
+
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true, isDefault: true },
+  });
+  if (!existing) return { error: "Product not found." };
+  if (existing.isDefault && !isSuperAdmin(role)) {
+    return {
+      error: "Catalog default products can only be removed by a super admin.",
+    };
+  }
 
   try {
     await prisma.product.delete({ where: { id } });

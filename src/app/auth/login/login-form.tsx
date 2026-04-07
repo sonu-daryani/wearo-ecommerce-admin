@@ -2,10 +2,9 @@
 
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 
 type Props = {
@@ -16,18 +15,10 @@ export function LoginForm({ googleAuthEnabled }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const registerOk = searchParams.get("registered") === "1";
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (registerOk) {
-      toast.success("Account created. You can sign in now.");
-    }
-  }, [registerOk]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -126,13 +117,6 @@ export function LoginForm({ googleAuthEnabled }: Props) {
           {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
-
-      <p className="mt-8 text-center text-sm text-muted-foreground">
-        No account?{" "}
-        <Link href="/auth/register" className="text-primary font-medium underline-offset-4 hover:underline">
-          Create one
-        </Link>
-      </p>
     </div>
   );
 }

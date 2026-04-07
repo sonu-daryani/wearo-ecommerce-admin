@@ -28,32 +28,30 @@ export default async function AdminOrdersPage({
     redirect("/admin/forbidden");
   }
 
-  const page = Math.max(1, parseInt(searchParams?.page ?? "1", 10) || 1);
+  const total = await prisma.order.count();
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const requestedPage = Math.max(1, parseInt(searchParams?.page ?? "1", 10) || 1);
+  const page = Math.min(requestedPage, totalPages);
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [total, orders] = await Promise.all([
-    prisma.order.count(),
-    prisma.order.findMany({
-      orderBy: { createdAt: "desc" },
-      take: PAGE_SIZE,
-      skip,
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        paymentStatus: true,
-        paymentMethod: true,
-        paymentProvider: true,
-        currencyCode: true,
-        grandTotal: true,
-        createdAt: true,
-        user: { select: { email: true, name: true } },
-        shipping: true,
-      },
-    }),
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const orders = await prisma.order.findMany({
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: PAGE_SIZE,
+    skip,
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentStatus: true,
+      paymentMethod: true,
+      paymentProvider: true,
+      currencyCode: true,
+      grandTotal: true,
+      createdAt: true,
+      user: { select: { email: true, name: true } },
+      shipping: true,
+    },
+  });
 
   return (
     <div>
@@ -129,29 +127,32 @@ export default async function AdminOrdersPage({
             </tbody>
           </table>
         </div>
-        {total > PAGE_SIZE && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-sm text-slate-600">
+        {total > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-slate-100 text-sm text-slate-600">
             <span>
-              Page {page} of {totalPages} · {total} orders
+              Showing {skip + 1}–{Math.min(skip + orders.length, total)} of {total}
+              {totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ""}
             </span>
-            <div className="flex gap-2">
-              {page > 1 && (
-                <Link
-                  href={`/admin/orders?page=${page - 1}`}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50"
-                >
-                  Previous
-                </Link>
-              )}
-              {page < totalPages && (
-                <Link
-                  href={`/admin/orders?page=${page + 1}`}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50"
-                >
-                  Next
-                </Link>
-              )}
-            </div>
+            {totalPages > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {page > 1 && (
+                  <Link
+                    href={page === 2 ? "/admin/orders" : `/admin/orders?page=${page - 1}`}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50"
+                  >
+                    Previous
+                  </Link>
+                )}
+                {page < totalPages && (
+                  <Link
+                    href={`/admin/orders?page=${page + 1}`}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50"
+                  >
+                    Next
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

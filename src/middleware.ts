@@ -2,10 +2,14 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const STAFF_ROLES = new Set(["VIEWER", "EDITOR", "ADMIN"]);
+const STAFF_ROLES = new Set(["VIEWER", "EDITOR", "ADMIN", "SUPERADMIN"]);
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+
+  if (pathname === "/auth/register" || pathname.startsWith("/auth/register/")) {
+    return NextResponse.redirect(new URL("/auth/login", req.nextUrl.origin));
+  }
 
   const token = await getToken({
     req,
@@ -38,5 +42,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/auth/register", "/auth/register/:path*"],
 };

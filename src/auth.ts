@@ -20,6 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             clientId: process.env.AUTH_GOOGLE_ID,
             clientSecret: process.env.AUTH_GOOGLE_SECRET,
             allowDangerousEmailAccountLinking: true,
+            authorization: { params: { prompt: "select_account" } },
           }),
         ]
       : []),
@@ -65,20 +66,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user?.id) {
         token.sub = user.id;
-        token.email = user.email ?? undefined;
-        token.name = user.name ?? undefined;
-        token.picture = user.image ?? undefined;
+      }
+      const sub = token.sub as string | undefined;
+      if (sub) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true },
+          where: { id: sub },
+          select: { email: true, name: true, image: true, role: true },
         });
-        token.role = dbUser?.role ?? "CUSTOMER";
-      } else if (token.sub && !token.role) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub as string },
-          select: { role: true },
-        });
-        token.role = dbUser?.role ?? "CUSTOMER";
+        if (dbUser) {
+          token.email = dbUser.email ?? undefined;
+          token.name = dbUser.name ?? undefined;
+          token.picture = dbUser.image ?? undefined;
+          token.role = dbUser.role ?? "CUSTOMER";
+        }
       }
       return token;
     },

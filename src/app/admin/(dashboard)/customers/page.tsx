@@ -10,6 +10,13 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+const STAFF_ROLES = new Set<string>(["ADMIN", "SUPERADMIN", "EDITOR", "VIEWER"]);
+
+function isStaffRole(role: string | null | undefined): boolean {
+  if (role == null || role === "") return false;
+  return STAFF_ROLES.has(role);
+}
+
 export default async function AdminCustomersPage() {
   const session = await auth();
   const role = session?.user?.role as Role;
@@ -17,8 +24,9 @@ export default async function AdminCustomersPage() {
     redirect("/admin/forbidden");
   }
 
-  const customers = await prisma.user.findMany({
-    where: { role: { notIn: ["ADMIN", "EDITOR", "VIEWER"] } },
+  // Load all users, then drop staff in JS. Prisma `role: { notIn: [...] }` omits MongoDB
+  // documents where `role` is missing (OAuth / legacy), which should still appear as customers.
+  const rows = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -27,9 +35,12 @@ export default async function AdminCustomersPage() {
       emailVerified: true,
       createdAt: true,
       image: true,
+      role: true,
       _count: { select: { orders: true } },
     },
   });
+
+  const customers = rows.filter((u) => !isStaffRole(u.role as string | null | undefined));
 
   return (
     <div>
@@ -39,7 +50,8 @@ export default async function AdminCustomersPage() {
         </Link>
         <h1 className="text-2xl font-bold text-slate-900 mt-2">Customers</h1>
         <p className="text-sm text-slate-600 mt-1">
-          Shopper accounts (non-staff users). Staff roles are hidden here.
+          All storefront sign-ups (including Google) except staff accounts (Admin, Super admin, Editor,
+          Viewer).
         </p>
       </div>
 

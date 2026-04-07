@@ -11,6 +11,7 @@
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "set-admin": "dotenv -e .env.local -- node scripts/set-admin-role.cjs",
+    "set-superadmin": "dotenv -e .env.local -- node scripts/set-superadmin-role.cjs",
     "seed:products": "node scripts/seed-products.cjs",
     "upload:r2-catalog": "node scripts/upload-catalog-images-to-r2.cjs",
     "upload:r2-site": "node scripts/upload-site-images-to-r2.cjs"

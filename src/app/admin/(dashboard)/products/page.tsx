@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { can } from "@/lib/rbac";
+import { can, isSuperAdmin } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { DeleteProductButton } from "./delete-product-button";
 
@@ -16,6 +16,7 @@ export default async function AdminProductsPage() {
   const role = session?.user?.role as Role;
   const canWrite = can(role, "product:write");
   const canDelete = can(role, "product:delete");
+  const superAdmin = isSuperAdmin(role);
 
   const products = await prisma.product.findMany({
     orderBy: { id: "asc" },
@@ -52,13 +53,14 @@ export default async function AdminProductsPage() {
                 <th className="px-4 py-3 font-medium">Price</th>
                 <th className="px-4 py-3 font-medium">Sections</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Catalog</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
                     No products. Run{" "}
                     <code className="text-xs bg-slate-100 px-1">npm run seed:products</code> or
                     create one.
@@ -98,6 +100,15 @@ export default async function AdminProductsPage() {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-2">
+                      {p.isDefault ? (
+                        <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">
+                          Seed default
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-xs">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-2 text-right space-x-2 whitespace-nowrap">
                       <Link
                         href={`/shop/product/${p.id}/${p.slug}`}
@@ -114,7 +125,17 @@ export default async function AdminProductsPage() {
                           Edit
                         </Link>
                       )}
-                      {canDelete && <DeleteProductButton id={p.id} />}
+                      {canDelete && (!p.isDefault || superAdmin) && (
+                        <DeleteProductButton id={p.id} />
+                      )}
+                      {canDelete && p.isDefault && !superAdmin && (
+                        <span
+                          className="text-slate-400 text-xs"
+                          title="Seed catalog — ask a super admin to remove"
+                        >
+                          Default
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

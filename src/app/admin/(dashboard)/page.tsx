@@ -21,6 +21,7 @@ export default async function AdminHomePage() {
   const canWrite = can(role, "cms:write");
   const canDelete = can(role, "cms:delete");
   const canProductWrite = can(role, "product:write");
+  const canProductDelete = can(role, "product:delete");
 
   return (
     <div>
@@ -60,6 +61,7 @@ export default async function AdminHomePage() {
             <li>{canDelete ? "✓ CMS delete" : "— CMS delete"}</li>
             <li>{can(role, "product:read") ? "✓ Products read" : "— Products read"}</li>
             <li>{canProductWrite ? "✓ Products write" : "— Products write"}</li>
+            <li>{canProductDelete ? "✓ Products delete" : "— Products delete"}</li>
             <li>{can(role, "order:read") ? "✓ Orders & store" : "— Orders & store"}</li>
           </ul>
         </div>
