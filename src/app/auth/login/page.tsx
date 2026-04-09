@@ -7,11 +7,13 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams?: { callbackUrl?: string };
+  searchParams?: { callbackUrl?: string; error?: string };
 }) {
   const session = await auth();
   const callbackUrl = searchParams?.callbackUrl || "/admin";
-  if (session?.user?.id) {
+  /** Don’t skip the login page while OAuth returned an error — user must see the message. */
+  const oauthError = searchParams?.error;
+  if (session?.user?.id && !oauthError) {
     redirect(callbackUrl);
   }
 

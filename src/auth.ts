@@ -10,8 +10,12 @@ const googleConfigured =
   Boolean(process.env.AUTH_GOOGLE_ID) &&
   Boolean(process.env.AUTH_GOOGLE_SECRET);
 
+const authSecret =
+  (process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET)?.trim() || undefined;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  secret: authSecret,
   adapter: PrismaAdapter(prisma),
   providers: [
     ...(googleConfigured

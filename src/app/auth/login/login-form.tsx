@@ -2,9 +2,10 @@
 
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { Button } from "@/components/ui/button";
+import { getAuthPageErrorMessage } from "@/lib/auth/auth-error-messages";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 type Props = {
@@ -15,10 +16,18 @@ export function LoginForm({ googleAuthEnabled }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const errorParam = searchParams.get("error");
+  const oauthErrorMessage = getAuthPageErrorMessage(errorParam);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (oauthErrorMessage) {
+      toast.error(oauthErrorMessage);
+    }
+  }, [oauthErrorMessage]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +63,21 @@ export function LoginForm({ googleAuthEnabled }: Props) {
       <p className="text-muted-foreground text-sm mb-8">
         Welcome back to Wearo.in
       </p>
+
+      {oauthErrorMessage && (
+        <div
+          className="mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
+          <p className="font-medium text-destructive">Sign-in could not complete</p>
+          <p className="mt-1.5 text-destructive/90 leading-relaxed">{oauthErrorMessage}</p>
+          {errorParam && (
+            <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+              Code: <span className="font-mono">{errorParam}</span>
+            </p>
+          )}
+        </div>
+      )}
 
       {googleAuthEnabled && (
         <>
