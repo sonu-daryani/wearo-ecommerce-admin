@@ -6,9 +6,15 @@ import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
 import prisma from "@/lib/prisma";
 
+const googleEnabledFlag = (process.env.AUTH_GOOGLE_ENABLED ?? "")
+  .trim()
+  .toLowerCase();
+const googleEnabled = googleEnabledFlag === "true" || googleEnabledFlag === "1";
+
 const googleConfigured =
-  Boolean(process.env.AUTH_GOOGLE_ID) &&
-  Boolean(process.env.AUTH_GOOGLE_SECRET);
+  googleEnabled &&
+  Boolean(process.env.AUTH_GOOGLE_ID?.trim()) &&
+  Boolean(process.env.AUTH_GOOGLE_SECRET?.trim());
 
 const authSecret =
   (process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET)?.trim() || undefined;

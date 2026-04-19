@@ -3,21 +3,20 @@
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { Button } from "@/components/ui/button";
 import { getAuthPageErrorMessage } from "@/lib/auth/auth-error-messages";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 type Props = {
   googleAuthEnabled: boolean;
+  callbackUrl: string;
+  oauthError?: string;
 };
 
-export function LoginForm({ googleAuthEnabled }: Props) {
+export function LoginForm({ googleAuthEnabled, callbackUrl, oauthError }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
-  const errorParam = searchParams.get("error");
-  const oauthErrorMessage = getAuthPageErrorMessage(errorParam);
+  const oauthErrorMessage = getAuthPageErrorMessage(oauthError);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -71,9 +70,9 @@ export function LoginForm({ googleAuthEnabled }: Props) {
         >
           <p className="font-medium text-destructive">Sign-in could not complete</p>
           <p className="mt-1.5 text-destructive/90 leading-relaxed">{oauthErrorMessage}</p>
-          {errorParam && (
+          {oauthError && (
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-              Code: <span className="font-mono">{errorParam}</span>
+              Code: <span className="font-mono">{oauthError}</span>
             </p>
           )}
         </div>
