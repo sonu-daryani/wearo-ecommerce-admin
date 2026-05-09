@@ -4,17 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
+import { isGoogleAuthEnabled } from "@/lib/google-auth";
 import prisma from "@/lib/prisma";
-
-const googleEnabledFlag = (process.env.AUTH_GOOGLE_ENABLED ?? "")
-  .trim()
-  .toLowerCase();
-const googleEnabled = googleEnabledFlag === "true" || googleEnabledFlag === "1";
-
-const googleConfigured =
-  googleEnabled &&
-  Boolean(process.env.AUTH_GOOGLE_ID?.trim()) &&
-  Boolean(process.env.AUTH_GOOGLE_SECRET?.trim());
 
 const authSecret =
   (process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET)?.trim() || undefined;
@@ -24,7 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: authSecret,
   adapter: PrismaAdapter(prisma),
   providers: [
-    ...(googleConfigured
+    ...(isGoogleAuthEnabled()
       ? [
           Google({
             clientId: process.env.AUTH_GOOGLE_ID,
