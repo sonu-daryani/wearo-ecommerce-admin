@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { auth } from "@/auth";
+import { AdminPageHeader, AdminPanel } from "@/components/admin/admin-page";
 import { can } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -46,23 +46,25 @@ export default async function SiteImagesPage() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link href="/admin/cms" className="text-sm text-primary hover:underline">
-          ← CMS documents
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">Site images</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Hero and “browse by style” backgrounds. Empty field + save resets to built-in{" "}
-          <code className="text-xs bg-slate-100 px-1 rounded">/public/images</code> defaults.
-          Uploads go to R2 under <code className="text-xs bg-slate-100 px-1 rounded">site/</code>.
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin/cms"
+        backLabel="CMS documents"
+        title="Site images"
+        description={
+          <>
+            Hero and “browse by style” backgrounds. Saving empty fields resets to{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">/public/images</code> defaults.
+            Uploads use R2 under <code className="rounded bg-slate-100 px-1 text-xs">site/</code>.
+          </>
+        }
+      />
 
       {can(role, "cms:write") ? (
         <SiteImagesForm action={updateSiteImages} initialState={initial} defaults={defaults} />
       ) : (
-        <ul className="rounded-xl border border-slate-200 bg-white p-4 space-y-4 text-sm">
+        <AdminPanel padded>
+          <ul className="space-y-4 text-sm">
           {SITE_IMAGE_KEYS.map((k) => (
             <li key={k} className="flex gap-4 border-b border-slate-100 pb-4 last:border-0 last:pb-0">
               <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
@@ -79,7 +81,8 @@ export default async function SiteImagesPage() {
               </div>
             </li>
           ))}
-        </ul>
+          </ul>
+        </AdminPanel>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
+import { AdminPageHeader, AdminPanel } from "@/components/admin/admin-page";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { can } from "@/lib/rbac";
@@ -37,39 +37,42 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   const shipping = parseOrderShipping(order.shipping);
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link href="/admin/orders" className="text-sm text-primary hover:underline">
-          ← Orders
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">{order.orderNumber}</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Placed{" "}
-          {order.createdAt.toLocaleString(undefined, {
-            dateStyle: "full",
-            timeStyle: "short",
-          })}
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin/orders"
+        backLabel="Orders"
+        title={order.orderNumber}
+        description={
+          <>
+            Placed{" "}
+            {order.createdAt.toLocaleString(undefined, {
+              dateStyle: "full",
+              timeStyle: "short",
+            })}
+          </>
+        }
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 mb-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Order status</p>
-          <p className="text-lg font-semibold text-slate-900 mt-1">{ORDER_STATUS_LABEL[order.status]}</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Order status</p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
+            {ORDER_STATUS_LABEL[order.status]}
+          </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Payment</p>
-          <p className="text-lg font-semibold text-slate-900 mt-1">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Payment</p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
             {PAYMENT_STATUS_LABEL[order.paymentStatus]}
           </p>
-          <p className="text-sm text-slate-600 mt-1 capitalize">
+          <p className="mt-2 text-sm capitalize text-slate-600">
             {order.paymentMethod}
             {order.paymentProvider ? ` · ${order.paymentProvider}` : ""}
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
+      <AdminPanel padded className="mb-0">
         <h2 className="font-semibold text-slate-900 mb-4">Line items</h2>
         {lines.length === 0 ? (
           <p className="text-sm text-slate-500">No line items parsed (legacy shape).</p>
@@ -125,9 +128,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             <dd>{formatMoney(order.grandTotal, order.currencyCode)}</dd>
           </div>
         </dl>
-      </div>
+      </AdminPanel>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
+      <AdminPanel padded>
         <h2 className="font-semibold text-slate-900 mb-4">Shipping &amp; account</h2>
         {shipping ? (
           <dl className="text-sm space-y-2">
@@ -160,9 +163,9 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             {order.user.name ? ` (${order.user.name})` : ""}
           </p>
         )}
-      </div>
+      </AdminPanel>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs leading-relaxed text-slate-500">
         Internal reference: <code className="bg-slate-100 px-1 rounded">{order.id}</code> · Guest
         link uses <code className="bg-slate-100 px-1 rounded">publicToken</code> on the storefront, not
         shown here for security.

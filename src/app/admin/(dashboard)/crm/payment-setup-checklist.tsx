@@ -13,7 +13,7 @@ export function PaymentSetupChecklist({ summary, canEditPayment }: Props) {
       : Math.round((summary.completedCount / summary.totalCount) * 100);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Payment setup</h2>

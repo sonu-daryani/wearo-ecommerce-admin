@@ -2,7 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const STAFF_ROLES = new Set(["VIEWER", "EDITOR", "ADMIN", "SUPERADMIN"]);
+const STAFF_ROLES = new Set(["VIEWER", "CONTRIBUTOR", "EDITOR", "ADMIN", "SUPERADMIN"]);
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;

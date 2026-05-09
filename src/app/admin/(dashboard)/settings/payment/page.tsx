@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AdminPageHeader } from "@/components/admin/admin-page";
 import { can } from "@/lib/rbac";
 import { getCompanySettings } from "@/lib/company-settings";
 import type { Role } from "@prisma/client";
@@ -40,20 +41,18 @@ export default async function PaymentSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/admin/settings"
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-        >
-          ← Company settings
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-slate-900">Payment settings</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Control checkout payment types. Publishable keys and API secrets are saved in the database and used only on
-          the server (never sent to the browser). The storefront reads the same database for payment APIs.
-        </p>
-      </div>
+    <div className="space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin/settings"
+        backLabel="Company settings"
+        title="Payment settings"
+        description={
+          <>
+            Checkout methods and gateways. Secrets are stored in the database and used only on the
+            server — never exposed to the browser.
+          </>
+        }
+      />
       <PaymentSettingsForm
         key={row.updatedAt.toISOString()}
         settings={settings}

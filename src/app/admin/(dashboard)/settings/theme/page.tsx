@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AdminPageHeader } from "@/components/admin/admin-page";
 import { can } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -21,19 +22,20 @@ export default async function ThemeEditorPage() {
   const settings = await getCompanySettings();
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <Link href="/admin/settings" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-          ← Company settings
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-slate-900">Theme editor</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Update storefront colors, radius, and styling tokens. Changes apply via CSS variables globally (Shopify-like).
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin/settings"
+        backLabel="Company settings"
+        title="Theme editor"
+        description={
+          <>
+            Storefront colors, radius, and CSS variables — similar to Shopify theme settings. Changes
+            apply globally on the shop.
+          </>
+        }
+      />
 
       <ThemeSettingsForm settings={settings} />
     </div>
   );
 }
-

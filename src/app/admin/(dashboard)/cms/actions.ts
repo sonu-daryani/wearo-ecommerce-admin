@@ -21,7 +21,11 @@ export async function createCmsDocument(
   formData: FormData
 ): Promise<FormState> {
   const session = await auth();
-  if (!session?.user?.id || !can(session.user.role, "cms:write")) {
+  if (!session?.user?.id) {
+    return { error: "You do not have permission to create content." };
+  }
+  const r = session.user.role;
+  if (!can(r, "cms:create") && !can(r, "cms:write")) {
     return { error: "You do not have permission to create content." };
   }
 

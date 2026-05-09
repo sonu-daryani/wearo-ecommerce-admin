@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { can } from "@/lib/rbac";
+import { canEditCms } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 
 export const metadata = {
@@ -12,7 +12,7 @@ export const metadata = {
 export default async function CmsViewPage({ params }: { params: { id: string } }) {
   const session = await auth();
   const role = session?.user?.role as Role;
-  const canWrite = can(role, "cms:write");
+  const canEdit = canEditCms(role);
 
   const doc = await prisma.cmsDocument.findUnique({
     where: { id: params.id },
@@ -33,7 +33,7 @@ export default async function CmsViewPage({ params }: { params: { id: string } }
           <h1 className="text-2xl font-bold text-slate-900">{doc.title}</h1>
           <p className="text-sm text-slate-500 mt-1 font-mono">{doc.slug}</p>
         </div>
-        {canWrite && (
+        {canEdit && (
           <div className="flex gap-2">
             <Link
               href={`/admin/cms/${doc.id}/edit`}

@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { can } from "@/lib/rbac";
+import {
+  adminBtnPrimary,
+  adminBtnSecondary,
+  AdminPageHeader,
+  AdminPanel,
+  AdminTableThead,
+} from "@/components/admin/admin-page";
+import { can, canCreateCms, canEditCms } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { DeleteCmsButton } from "./delete-cms-button";
 
@@ -13,7 +20,8 @@ export const metadata = {
 export default async function AdminCmsListPage() {
   const session = await auth();
   const role = session?.user?.role as Role;
-  const canWrite = can(role, "cms:write");
+  const canCreate = canCreateCms(role);
+  const canEdit = canEditCms(role);
   const canDelete = can(role, "cms:delete");
 
   const docs = await prisma.cmsDocument.findMany({
@@ -22,57 +30,55 @@ export default async function AdminCmsListPage() {
   });
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">CMS documents</h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Manage pages, announcements, and banner copy. Published entries are available via{" "}
-            <code className="text-xs bg-slate-200 px-1 rounded">/api/cms/public/[slug]</code>
-            . Homepage hero and style tiles are under{" "}
-            <Link href="/admin/cms/site-images" className="text-primary font-medium hover:underline">
+    <div className="space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin"
+        backLabel="Dashboard"
+        title="CMS documents"
+        description={
+          <>
+            Pages, announcements, and banner copy. Published content is served via{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">/api/cms/public/[slug]</code>. Hero
+            and style tiles:{" "}
+            <Link href="/admin/cms/site-images" className="font-medium text-primary hover:underline">
               Site images
             </Link>
             .
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 justify-end">
-          <Link
-            href="/admin/cms/site-images"
-            className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-center hover:bg-slate-50"
-          >
-            Site images
-          </Link>
-          {canWrite && (
-            <Link
-              href="/admin/cms/new"
-              className="rounded-full bg-slate-900 text-white px-5 py-2.5 text-sm font-medium text-center hover:bg-slate-800"
-            >
-              New document
+          </>
+        }
+        actions={
+          <>
+            <Link href="/admin/cms/site-images" className={adminBtnSecondary}>
+              Site images
             </Link>
-          )}
-        </div>
-      </div>
+            {canCreate && (
+              <Link href="/admin/cms/new" className={adminBtnPrimary}>
+                New document
+              </Link>
+            )}
+          </>
+        }
+      />
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <AdminPanel>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+          <table className="w-full text-left text-sm">
+            <AdminTableThead>
               <tr>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Updated</th>
-                <th className="px-4 py-3 font-medium text-right">Actions</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
-            </thead>
+            </AdminTableThead>
             <tbody className="divide-y divide-slate-100">
               {docs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-14 text-center text-slate-500">
                     No documents yet.
-                    {canWrite && (
+                    {canCreate && (
                       <>
                         {" "}
                         <Link href="/admin/cms/new" className="text-primary font-medium underline">
@@ -84,7 +90,7 @@ export default async function AdminCmsListPage() {
                 </tr>
               ) : (
                 docs.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-50/80">
+                  <tr key={d.id} className="transition-colors hover:bg-slate-50/80">
                     <td className="px-4 py-3 font-medium text-slate-900">{d.title}</td>
                     <td className="px-4 py-3 text-slate-600 font-mono text-xs">{d.slug}</td>
                     <td className="px-4 py-3 text-slate-600">{d.type}</td>
@@ -109,7 +115,7 @@ export default async function AdminCmsListPage() {
                       >
                         View
                       </Link>
-                      {canWrite && (
+                      {canEdit && (
                         <Link
                           href={`/admin/cms/${d.id}/edit`}
                           className="text-slate-700 font-medium hover:underline"
@@ -125,7 +131,7 @@ export default async function AdminCmsListPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminPanel>
     </div>
   );
 }

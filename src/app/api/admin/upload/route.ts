@@ -21,7 +21,9 @@ export async function POST(req: Request) {
   const session = await auth();
   const role = session?.user?.role as Role | undefined;
   const canUpload =
-    can(role, "product:write") || can(role, "cms:write");
+    can(role, "product:create") ||
+    can(role, "product:write") ||
+    can(role, "cms:write");
   if (!session?.user?.id || !canUpload) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -48,9 +50,13 @@ export async function POST(req: Request) {
       { status: 403 }
     );
   }
-  if (folder === "products" && !can(role, "product:write")) {
+  if (
+    folder === "products" &&
+    !can(role, "product:write") &&
+    !can(role, "product:create")
+  ) {
     return NextResponse.json(
-      { error: "Product write permission required for catalog uploads." },
+      { error: "Product create or write permission required for catalog uploads." },
       { status: 403 }
     );
   }

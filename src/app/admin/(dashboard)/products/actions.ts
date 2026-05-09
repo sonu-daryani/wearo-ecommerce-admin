@@ -34,7 +34,10 @@ export async function createProduct(
 ): Promise<ProductFormState> {
   const session = await auth();
   const role = session?.user?.role as Role | undefined;
-  if (!session?.user?.id || !can(role, "product:write")) {
+  if (
+    !session?.user?.id ||
+    (!can(role, "product:create") && !can(role, "product:write"))
+  ) {
     return { error: "Forbidden." };
   }
 

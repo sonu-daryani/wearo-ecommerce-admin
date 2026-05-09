@@ -16,7 +16,7 @@ export function AdminMain({ children }: Props) {
     <main
       className={cn(
         "flex-1 w-full min-w-0",
-        editorFullWidth ? "p-2 sm:p-3 md:p-4" : "p-4 md:p-8 max-w-5xl mx-auto"
+        editorFullWidth ? "p-2 sm:p-3 md:p-4" : "mx-auto max-w-6xl p-4 md:p-8"
       )}
     >
       {children}

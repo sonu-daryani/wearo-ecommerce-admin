@@ -4,13 +4,20 @@ import prisma from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { AdminPageHeader, AdminPanel, AdminTableThead } from "@/components/admin/admin-page";
 
 export const metadata = {
   title: "Customers",
   robots: { index: false, follow: false },
 };
 
-const STAFF_ROLES = new Set<string>(["ADMIN", "SUPERADMIN", "EDITOR", "VIEWER"]);
+const STAFF_ROLES = new Set<string>([
+  "ADMIN",
+  "SUPERADMIN",
+  "EDITOR",
+  "VIEWER",
+  "CONTRIBUTOR",
+]);
 
 function isStaffRole(role: string | null | undefined): boolean {
   if (role == null || role === "") return false;
@@ -24,8 +31,6 @@ export default async function AdminCustomersPage() {
     redirect("/admin/forbidden");
   }
 
-  // Load all users, then drop staff in JS. Prisma `role: { notIn: [...] }` omits MongoDB
-  // documents where `role` is missing (OAuth / legacy), which should still appear as customers.
   const rows = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -43,39 +48,40 @@ export default async function AdminCustomersPage() {
   const customers = rows.filter((u) => !isStaffRole(u.role as string | null | undefined));
 
   return (
-    <div>
-      <div className="mb-6">
-        <Link href="/admin/crm" className="text-sm text-primary hover:underline">
-          ← Store overview
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">Customers</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          All storefront sign-ups (including Google) except staff accounts (Admin, Super admin, Editor,
-          Viewer).
-        </p>
-      </div>
+    <div className="space-y-8 pb-8">
+      <AdminPageHeader
+        backHref="/admin/crm"
+        backLabel="Store overview"
+        title="Customers"
+        description={
+          <>
+            Storefront sign-ups (including Google). Staff accounts (admin, editor, viewer,
+            contributor, …) are excluded from this list.
+          </>
+        }
+      />
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <AdminPanel>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+          <table className="w-full text-left text-sm">
+            <AdminTableThead>
               <tr>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Joined</th>
-                <th className="px-4 py-3 font-medium text-right">Orders</th>
+                <th className="px-4 py-3 text-right font-medium">Orders</th>
               </tr>
-            </thead>
+            </AdminTableThead>
             <tbody className="divide-y divide-slate-100">
               {customers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-14 text-center text-slate-500">
                     No customer accounts yet. Registrations from the storefront appear here.
                   </td>
                 </tr>
               ) : (
                 customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/80">
+                  <tr key={c.id} className="transition-colors hover:bg-slate-50/80">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {c.image ? (
@@ -83,10 +89,10 @@ export default async function AdminCustomersPage() {
                           <img
                             src={c.image}
                             alt=""
-                            className="h-9 w-9 rounded-full object-cover bg-slate-100"
+                            className="h-9 w-9 rounded-full bg-slate-100 object-cover"
                           />
                         ) : (
-                          <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600">
                             {(c.name ?? c.email ?? "?").slice(0, 1).toUpperCase()}
                           </div>
                         )}
@@ -96,18 +102,18 @@ export default async function AdminCustomersPage() {
                     <td className="px-4 py-3 text-slate-700">
                       <span className="break-all">{c.email ?? "—"}</span>
                       {c.emailVerified && (
-                        <span className="ml-2 text-xs text-emerald-600 font-medium">Verified</span>
+                        <span className="ml-2 text-xs font-medium text-emerald-600">Verified</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
                       {c.createdAt.toLocaleDateString(undefined, { dateStyle: "medium" })}
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-slate-900">
                       {c._count.orders > 0 ? (
                         <Link
-                          href={`/admin/orders`}
-                          className="text-indigo-600 hover:text-indigo-800"
-                          title="Open orders list; filter by customer in Studio if needed"
+                          href="/admin/orders"
+                          className="text-primary hover:underline"
+                          title="Open orders list"
                         >
                           {c._count.orders}
                         </Link>
@@ -121,7 +127,7 @@ export default async function AdminCustomersPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminPanel>
     </div>
   );
 }
