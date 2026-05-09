@@ -11,9 +11,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", req.nextUrl.origin));
   }
 
+  /** Match `__Secure-authjs.session-token` on HTTPS (Auth.js); omitting this breaks token decode on Vercel. */
+  const secureCookie = req.nextUrl.protocol === "https:";
+
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+    secureCookie,
   });
 
   if (pathname.startsWith("/admin/forbidden")) {
