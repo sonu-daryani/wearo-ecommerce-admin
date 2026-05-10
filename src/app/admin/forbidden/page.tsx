@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import SignOutButton from "@/components/auth/SignOutButton";
 import { ROLE_LABELS } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { ShieldAlert } from "lucide-react";
@@ -7,6 +8,8 @@ import { ShieldAlert } from "lucide-react";
 export default async function AdminForbiddenPage() {
   const session = await auth();
   const role = (session?.user?.role ?? "CUSTOMER") as Role;
+  const storefrontUrl =
+    process.env.NEXT_PUBLIC_STOREFRONT_URL?.replace(/\/$/, "") || "http://localhost:3000";
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-16">
@@ -31,17 +34,17 @@ export default async function AdminForbiddenPage() {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/"
+            href={storefrontUrl}
             className="inline-flex justify-center rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
           >
             Back to store
           </Link>
-          <Link
-            href="/account"
-            className="inline-flex justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+          <SignOutButton
+            variant="outline"
+            className="inline-flex h-auto justify-center rounded-full border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50"
           >
-            Account
-          </Link>
+            Log out
+          </SignOutButton>
         </div>
       </div>
     </div>
