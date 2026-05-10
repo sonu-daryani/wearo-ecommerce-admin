@@ -112,3 +112,15 @@
 .Toastify__progress-bar {
   border-radius: 0 0 1rem 1rem;
 }
+
+/* TipTap editor (admin rich text) */
+.tiptap {
+  outline: none;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: rgb(148 163 184);
+  pointer-events: none;
+  height: 0;
+}

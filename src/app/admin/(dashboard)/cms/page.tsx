@@ -11,6 +11,7 @@ import {
 import { can, canCreateCms, canEditCms } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
 import { DeleteCmsButton } from "./delete-cms-button";
+import { StorefrontPagesPanel } from "./storefront-pages-panel";
 
 export const metadata = {
   title: "CMS",
@@ -38,8 +39,9 @@ export default async function AdminCmsListPage() {
         description={
           <>
             Pages, announcements, and banner copy. Published content is served via{" "}
-            <code className="rounded bg-slate-100 px-1 text-xs">/api/cms/public/[slug]</code>. Hero
-            and style tiles:{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">/api/cms/public/[slug]</code> on the
+            storefront. Use the tables below for marketing slugs that match footer routes. Hero and
+            style tiles:{" "}
             <Link href="/admin/cms/site-images" className="font-medium text-primary hover:underline">
               Site images
             </Link>
@@ -59,6 +61,8 @@ export default async function AdminCmsListPage() {
           </>
         }
       />
+
+      <StorefrontPagesPanel />
 
       <AdminPanel>
         <div className="overflow-x-auto">

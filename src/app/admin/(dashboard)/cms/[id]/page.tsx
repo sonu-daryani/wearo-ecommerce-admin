@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canEditCms } from "@/lib/rbac";
 import type { Role } from "@prisma/client";
+import { sanitizeRichHtml } from "@/lib/sanitize-rich-html";
 
 export const metadata = {
   robots: { index: false, follow: false },
@@ -64,7 +65,10 @@ export default async function CmsViewPage({ params }: { params: { id: string } }
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
           Content
         </h2>
-        <pre className="whitespace-pre-wrap text-sm text-slate-800 font-mono">{doc.content}</pre>
+        <div
+          className="cms-html-preview max-w-none text-sm leading-relaxed text-slate-800 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-2 [&_p]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_pre]:p-3 [&_pre]:text-slate-100 [&_ul]:my-2"
+          dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(doc.content) }}
+        />
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { useAdminFormToast } from "@/hooks/use-admin-form-toast";
 import { createCmsDocument, type FormState } from "../actions";
 import Link from "next/link";
+import { CmsRichTextField } from "@/components/admin/cms-rich-text-field";
 
 const initial: FormState = {};
 
@@ -20,7 +21,13 @@ function Submit({ label }: { label: string }) {
   );
 }
 
-export function CmsCreateForm() {
+export function CmsCreateForm({
+  defaultSlug,
+  defaultTitle,
+}: {
+  defaultSlug?: string;
+  defaultTitle?: string;
+}) {
   const [state, action] = useFormState(createCmsDocument, initial);
   useAdminFormToast(state, { successMessage: "Document created" });
 
@@ -40,6 +47,7 @@ export function CmsCreateForm() {
           id="title"
           name="title"
           required
+          defaultValue={defaultTitle ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -52,6 +60,7 @@ export function CmsCreateForm() {
           id="slug"
           name="slug"
           placeholder="auto from title if empty"
+          defaultValue={defaultSlug ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
         />
         <p className="text-xs text-slate-500 mt-1">Lowercase, hyphens only. Used in /api/cms/public/[slug]</p>
@@ -84,15 +93,10 @@ export function CmsCreateForm() {
       </div>
 
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-slate-700 mb-1">
-          Content (Markdown)
+        <label id="cms-content-label" className="block text-sm font-medium text-slate-700 mb-1">
+          Content (rich text)
         </label>
-        <textarea
-          id="content"
-          name="content"
-          rows={12}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
-        />
+        <CmsRichTextField name="content" defaultHtml="" aria-labelledby="cms-content-label" />
       </div>
 
       <div className="flex items-center gap-2">

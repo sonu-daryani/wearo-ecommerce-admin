@@ -11,12 +11,21 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewCmsPage() {
+type NewCmsPageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default async function NewCmsPage({ searchParams }: NewCmsPageProps) {
   const session = await auth();
   const role = session?.user?.role as Role;
   if (!canCreateCms(role)) {
     redirect("/admin/cms");
   }
+
+  const rawSlug = searchParams?.slug;
+  const rawTitle = searchParams?.title;
+  const defaultSlug = typeof rawSlug === "string" ? rawSlug : undefined;
+  const defaultTitle = typeof rawTitle === "string" ? rawTitle : undefined;
 
   return (
     <div className="space-y-8 pb-8">
@@ -34,7 +43,7 @@ export default async function NewCmsPage() {
           </>
         }
       />
-      <CmsCreateForm />
+      <CmsCreateForm defaultSlug={defaultSlug} defaultTitle={defaultTitle} />
     </div>
   );
 }

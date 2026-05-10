@@ -8,6 +8,7 @@ import {
   STOREFRONT_THEME_TOKEN_KEYS,
 } from "@/lib/storefront-theme-tokens";
 import { updateThemeSettings, type ThemeSettingsFormState } from "../settings/theme/actions";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 const EDITOR_BLOCKS = ["topBanner", "navbar", "footer", "hero"] as const;
 type EditorBlockId = (typeof EDITOR_BLOCKS)[number];
@@ -240,11 +241,11 @@ export default function EditorShell({ storefrontUrl, initialTheme }: Props) {
               <ColorTokenField label="Bar text" value={bannerFg} onChange={(v) => setField("--banner-fg", v)} />
               <div className="pt-2 border-t border-slate-200">
                 <label className="block text-xs text-slate-700 mb-1">Top banner message</label>
-                <textarea
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
-                  rows={2}
+                <RichTextEditor
+                  compact
+                  placeholder="Banner message…"
                   value={theme["content.topBannerMessage"] ?? ""}
-                  onChange={(e) => setField("content.topBannerMessage", e.target.value)}
+                  onChange={(html) => setField("content.topBannerMessage", html)}
                 />
               </div>
             </section>
@@ -259,34 +260,35 @@ export default function EditorShell({ storefrontUrl, initialTheme }: Props) {
               <div className="pt-2 border-t border-slate-200 space-y-2">
                 <p className="text-xs font-semibold text-slate-800">Navbar — copy</p>
                 <label className="block text-xs text-slate-700">Brand</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
+                  placeholder="Brand name…"
                   value={theme["content.navbarBrand"] ?? ""}
-                  onChange={(e) => setField("content.navbarBrand", e.target.value)}
+                  onChange={(html) => setField("content.navbarBrand", html)}
                 />
                 <label className="block text-xs text-slate-700">Menu: Shop</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
                   value={theme["content.navbarMenuShop"] ?? ""}
-                  onChange={(e) => setField("content.navbarMenuShop", e.target.value)}
+                  onChange={(html) => setField("content.navbarMenuShop", html)}
                 />
                 <label className="block text-xs text-slate-700">Menu: On Sale</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
                   value={theme["content.navbarMenuOnSale"] ?? ""}
-                  onChange={(e) => setField("content.navbarMenuOnSale", e.target.value)}
+                  onChange={(html) => setField("content.navbarMenuOnSale", html)}
                 />
                 <label className="block text-xs text-slate-700">Menu: New Arrivals</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
                   value={theme["content.navbarMenuNewArrivals"] ?? ""}
-                  onChange={(e) => setField("content.navbarMenuNewArrivals", e.target.value)}
+                  onChange={(html) => setField("content.navbarMenuNewArrivals", html)}
                 />
                 <label className="block text-xs text-slate-700">Menu: Brands</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
                   value={theme["content.navbarMenuBrands"] ?? ""}
-                  onChange={(e) => setField("content.navbarMenuBrands", e.target.value)}
+                  onChange={(html) => setField("content.navbarMenuBrands", html)}
                 />
               </div>
             </section>
@@ -307,17 +309,17 @@ export default function EditorShell({ storefrontUrl, initialTheme }: Props) {
               <div className="pt-2 border-t border-slate-200 space-y-2">
                 <p className="text-xs font-semibold text-slate-800">Footer — copy</p>
                 <label className="block text-xs text-slate-700">Brand</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
                   value={theme["content.footerBrand"] ?? ""}
-                  onChange={(e) => setField("content.footerBrand", e.target.value)}
+                  onChange={(html) => setField("content.footerBrand", html)}
                 />
                 <label className="block text-xs text-slate-700">Tagline</label>
-                <textarea
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
-                  rows={2}
+                <RichTextEditor
+                  compact
+                  placeholder="Short tagline…"
                   value={theme["content.footerTagline"] ?? ""}
-                  onChange={(e) => setField("content.footerTagline", e.target.value)}
+                  onChange={(html) => setField("content.footerTagline", html)}
                 />
               </div>
             </section>
@@ -340,24 +342,25 @@ export default function EditorShell({ storefrontUrl, initialTheme }: Props) {
               <div className="pt-2 border-t border-slate-200 space-y-2">
                 <p className="text-xs font-semibold text-slate-800">Hero — copy</p>
                 <label className="block text-xs text-slate-700">Headline</label>
-                <textarea
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
-                  rows={2}
+                <RichTextEditor
+                  compact
+                  placeholder="Hero headline…"
                   value={theme["content.heroTitle"] ?? ""}
-                  onChange={(e) => setField("content.heroTitle", e.target.value)}
+                  onChange={(html) => setField("content.heroTitle", html)}
                 />
                 <label className="block text-xs text-slate-700">Subtext</label>
-                <textarea
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
-                  rows={3}
+                <RichTextEditor
+                  compact
+                  placeholder="Supporting line…"
                   value={theme["content.heroSubtitle"] ?? ""}
-                  onChange={(e) => setField("content.heroSubtitle", e.target.value)}
+                  onChange={(html) => setField("content.heroSubtitle", html)}
                 />
                 <label className="block text-xs text-slate-700">CTA button</label>
-                <input
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-xs bg-white"
+                <RichTextEditor
+                  compact
+                  placeholder="Shop now"
                   value={theme["content.heroCta"] ?? ""}
-                  onChange={(e) => setField("content.heroCta", e.target.value)}
+                  onChange={(html) => setField("content.heroCta", html)}
                 />
               </div>
             </section>

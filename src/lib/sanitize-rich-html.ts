@@ -19,12 +19,27 @@ const RICH_TEXT_OPTS: sanitizeHtml.IOptions = {
     "h6",
     "div",
     "font",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "code",
+    "pre",
+    "hr",
+    "s",
+    "del",
+    "section",
   ],
   allowedAttributes: {
-    a: ["href", "target", "rel"],
-    span: ["style"],
-    p: ["style"],
-    div: ["style"],
+    a: ["href", "target", "rel", "class"],
+    section: ["id", "class"],
+    span: ["style", "class"],
+    p: ["style", "class"],
+    div: ["style", "class"],
+    ul: ["class"],
+    ol: ["class"],
+    li: ["class"],
+    strong: ["class"],
     font: ["color", "size", "face"],
   },
   allowedStyles: {
@@ -42,6 +57,7 @@ const RICH_TEXT_OPTS: sanitizeHtml.IOptions = {
         rel: "noopener noreferrer",
       };
       if (attribs.target === "_blank") out.target = "_blank";
+      if (attribs.class) out.class = attribs.class;
       return { tagName: "a", attribs: out };
     },
   },

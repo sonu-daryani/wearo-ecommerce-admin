@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import type { CmsType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { sanitizeRichHtml } from "@/lib/sanitize-rich-html";
 
 export type FormState = { error?: string; toastAt?: number; redirectTo?: string };
 
@@ -32,7 +33,8 @@ export async function createCmsDocument(
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim().toLowerCase();
   const summary = String(formData.get("summary") ?? "").trim() || null;
-  const content = String(formData.get("content") ?? "");
+  const rawContent = String(formData.get("content") ?? "");
+  const content = sanitizeRichHtml(rawContent);
   const type = parseType(formData.get("type"));
   const published = formData.get("published") === "on";
 
@@ -79,7 +81,8 @@ export async function updateCmsDocument(
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim().toLowerCase();
   const summary = String(formData.get("summary") ?? "").trim() || null;
-  const content = String(formData.get("content") ?? "");
+  const rawContent = String(formData.get("content") ?? "");
+  const content = sanitizeRichHtml(rawContent);
   const type = parseType(formData.get("type"));
   const published = formData.get("published") === "on";
 
